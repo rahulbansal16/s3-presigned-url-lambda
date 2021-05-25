@@ -29,6 +29,18 @@ functions:
     handler: handler.signedUrl
     events:
       - http: GET /signed-upload-url
+  startRequest:
+    handler: handler.startRequest
+    events:
+      - http: GET /upload/start
+  uploadURL:
+    handler: handler.uploadURL
+    events:
+      - http: GET /upload/url
+  completeUpload:
+    handler: handler.completeUpload
+    events:
+      - http: GET /upload/complete
 
 resources:
   Resources:
