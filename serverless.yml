@@ -28,19 +28,35 @@ functions:
   signedUrl:
     handler: handler.signedUrl
     events:
-      - http: GET /signed-upload-url
+      - http:
+          path: /signed-upload-url
+          method: GET
+          cors:
+            origin: '*'
   startRequest:
     handler: handler.startRequest
     events:
-      - http: GET /upload/start
+      - http:
+          path: /upload/start
+          method: GET
+          cors:
+            origin: '*'
   uploadURL:
     handler: handler.uploadURL
     events:
-      - http: GET /upload/url
+      - http:
+          path: /upload/url
+          method: GET
+          cors:
+            origin: '*'
   completeUpload:
     handler: handler.completeUpload
     events:
-      - http: GET /upload/complete
+      - http:
+          path: /upload/complete
+          method: GET
+          cors:
+            origin: '*'
 
 resources:
   Resources:
