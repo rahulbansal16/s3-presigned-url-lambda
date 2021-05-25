@@ -12,6 +12,10 @@ module.exports.signedUrl = async event => {
     });
     return {
       statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true,
+      },
       body: JSON.stringify({
         success: true,
         message: 'AWS S3 Pre-signed urls generated successfully.',
@@ -41,6 +45,10 @@ module.exports.startRequest = async event => {
     console.log('The result is', res);
     return {
       statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true,
+      },
       body: JSON.stringify({
         UploadId: res.UploadId
       })
@@ -50,6 +58,10 @@ module.exports.startRequest = async event => {
     console.log('Error starting the upload request', err);
     return {
       statusCode: err.statusCode || 502,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true,
+      },
       body: JSON.stringify({
         success: false,
         message: "Unable to start the Multipart upload request",
@@ -82,6 +94,10 @@ module.exports.uploadURL = async events => {
     console.log('Error starting the upload request', err);
     return {
       statusCode: err.statusCode || 502,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true,
+      },
       body: JSON.stringify({
         success: false,
         message: "Unable to start the Multipart upload request",
