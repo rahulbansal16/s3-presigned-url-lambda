@@ -62,7 +62,7 @@ functions:
     events:
       - http:
           path: /upload/complete
-          method: GET
+          method: POST
           cors:
             origin: '*'
 

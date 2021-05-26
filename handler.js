@@ -142,41 +142,41 @@ module.exports.partialUpload = async events => {
   }
 }
 
-module.exports.completeUpload = async events => {
-  // try {
-  //   const bodyData = JSON.parse(event.body);
-  //   const params = {
-  //     Bucket: bodyData.bucket, /* Bucket name */
-  //     Key: bodyData.fileName, /* File name */
-  //     MultipartUpload: {
-  //       Parts: bodyData.parts /* Parts uploaded */
-  //     },
-  //     UploadId: bodyData.uploadId /* UploadId from Endpoint 1 response */
-  //   }
-  
-  //   const data = await s3.completeMultipartUpload(params).promise()
+module.exports.completeUpload = async event => {
+  try {
+    const bodyData = JSON.parse(event.body);
+    const params = {
+      Bucket: process.env.S3_BUCKET, /* Bucket name */
+      Key: bodyData.FileName, /* File name */
+      MultipartUpload: {
+        Parts: bodyData.parts /* Parts uploaded */
+      },
+      UploadId: bodyData.UploadId /* UploadId from Endpoint 1 response */
+    }
 
-  //   return {
-  //     statusCode: 200,
-  //     headers: {
-  //       'Access-Control-Allow-Origin': '*',
-  //       'Access-Control-Allow-Credentials': true,
-  //       // 'Access-Control-Allow-Methods': 'OPTIONS,POST',
-  //       // 'Access-Control-Allow-Headers': 'Content-Type',
-  //     },
-  //     body: JSON.stringify(data)
-  //   };
-  // } catch (err){
-  //   console.log('Error starting the upload request', err);
-  //   return {
-  //     statusCode: err.statusCode || 502,
-  //     body: JSON.stringify({
-  //       success: false,
-  //       message: "Unable to start the Multipart upload request",
-  //       err
-  //     })
-  //   }
-  // }
+    const data = await s3.completeMultipartUpload(params).promise()
+
+    return {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true,
+        // 'Access-Control-Allow-Methods': 'OPTIONS,POST',
+        // 'Access-Control-Allow-Headers': 'Content-Type',
+      },
+      body: JSON.stringify(data)
+    };
+  } catch (err){
+    console.log('Error starting the upload request', err);
+    return {
+      statusCode: err.statusCode || 502,
+      body: JSON.stringify({
+        success: false,
+        message: "Unable to complete the Multipart upload request",
+        err
+      })
+    }
+  }
 }
 
 
