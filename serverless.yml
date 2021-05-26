@@ -49,6 +49,14 @@ functions:
           method: GET
           cors:
             origin: '*'
+  partialUpload:
+    handler: handler.partialUpload
+    events:
+      - http:
+          path: /upload/partial
+          method: POST
+          cors:
+            origin: '*'
   completeUpload:
     handler: handler.completeUpload
     events:
