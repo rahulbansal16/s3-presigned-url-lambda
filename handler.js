@@ -76,7 +76,7 @@ module.exports.uploadURL = async events => {
     const {UploadId, PartNumber, FileName} = events['queryStringParameters']
     let params = {
       Bucket: process.env.S3_BUCKET,
-      Key: FileName,
+      Key: encodeURIComponent(FileName),
       PartNumber,
       UploadId
     };
@@ -101,6 +101,41 @@ module.exports.uploadURL = async events => {
       body: JSON.stringify({
         success: false,
         message: "Unable to start the Multipart upload request",
+        err
+      })
+    }
+  }
+}
+
+module.exports.partialUpload = async events => {
+  try {
+    const {UploadId, PartNumber, FileName} = events['queryStringParameters']
+    var params = {
+      Body: events.body,
+      Bucket: process.env.S3_BUCKET,
+      Key: FileName,
+      PartNumber: PartNumber,
+      UploadId: UploadId
+     };
+     const res = await s3.uploadPart(params).promise()
+     return {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true,
+      },
+      body: JSON.stringify(res)
+    } } catch (err){
+    console.log('Error starting the upload request', err);
+    return {
+      statusCode: err.statusCode || 502,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true,
+      },
+      body: JSON.stringify({
+        success: false,
+        message: "Unable to complete the Partial upload request",
         err
       })
     }
