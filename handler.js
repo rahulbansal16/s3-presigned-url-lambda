@@ -10,6 +10,7 @@ module.exports.signedUrl = async event => {
       Bucket: process.env.S3_BUCKET,
       Key: 'test-file.jpg', // File name could come from queryParameters
     });
+    console.log('About to return the result');
     return {
       statusCode: 200,
       headers: {
@@ -23,7 +24,7 @@ module.exports.signedUrl = async event => {
       }),
     };
   } catch (err) {
-    console.log('Error getting presigned url from AWS S3:', err);
+    console.error('Error getting presigned url from AWS S3:', err);
     return {
       statusCode: err.statusCode || 502,
       body: JSON.stringify({
@@ -55,7 +56,7 @@ module.exports.startRequest = async event => {
     }
 
   } catch (err){
-    console.log('Error starting the upload request', err);
+    console.error('Error starting the upload request', err);
     return {
       statusCode: err.statusCode || 502,
       headers: {
@@ -109,6 +110,7 @@ module.exports.uploadURL = async events => {
 
 module.exports.partialUpload = async events => {
   try {
+    console.log('The events is', events)
     const {UploadId, PartNumber, FileName} = events['queryStringParameters']
     var params = {
       Body: events.body,
@@ -118,6 +120,7 @@ module.exports.partialUpload = async events => {
       UploadId: UploadId
      };
      const res = await s3.uploadPart(params).promise()
+     console.log('The result is', res);
      return {
       statusCode: 200,
       headers: {
@@ -126,7 +129,7 @@ module.exports.partialUpload = async events => {
       },
       body: JSON.stringify(res)
     } } catch (err){
-    console.log('Error starting the upload request', err);
+    console.error('Error starting the upload request', err);
     return {
       statusCode: err.statusCode || 502,
       headers: {
@@ -144,15 +147,26 @@ module.exports.partialUpload = async events => {
 
 module.exports.completeUpload = async event => {
   try {
-    const bodyData = JSON.parse(event.body);
+    console.log('The body is', event.body)
+    // const bodyData = event.body
+    var {FileName, Parts, UploadId} = event.body
+    try {
+      body = JSON.parse(event.body)
+      FileName = body.FileName
+      Parts = body.Parts
+      UploadId = body.UploadId
+    } catch (err){
+      console.error('Err',err)
+    }
     const params = {
       Bucket: process.env.S3_BUCKET, /* Bucket name */
-      Key: bodyData.FileName, /* File name */
+      Key: FileName, /* File name */
       MultipartUpload: {
-        Parts: bodyData.parts /* Parts uploaded */
+        Parts: Parts /* Parts uploaded */
       },
-      UploadId: bodyData.UploadId /* UploadId from Endpoint 1 response */
+      UploadId: UploadId /* UploadId from Endpoint 1 response */
     }
+    console.log('The params is', params);
 
     const data = await s3.completeMultipartUpload(params).promise()
 
@@ -161,15 +175,17 @@ module.exports.completeUpload = async event => {
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Credentials': true,
-        // 'Access-Control-Allow-Methods': 'OPTIONS,POST',
-        // 'Access-Control-Allow-Headers': 'Content-Type',
       },
       body: JSON.stringify(data)
     };
   } catch (err){
-    console.log('Error starting the upload request', err);
+    console.error('Error starting the upload request', err);
     return {
       statusCode: err.statusCode || 502,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true,
+      },
       body: JSON.stringify({
         success: false,
         message: "Unable to complete the Multipart upload request",
