@@ -1,7 +1,12 @@
 const AWS = require('aws-sdk');
 // const express = require("express");
 // const app = express();
-const s3 = new AWS.S3();
+const s3 = new AWS.S3(
+  {
+    apiVersion: '2006-03-01',
+	  signatureVersion: 'v4'
+  }
+);
 
 module.exports.signedUrl = async event => {
   try {
@@ -80,7 +85,8 @@ module.exports.uploadURL = async events => {
       Bucket: process.env.S3_BUCKET,
       Key: encodeURIComponent(FileName),
       PartNumber,
-      UploadId
+      UploadId,
+      Body: ''
     };
     const res = await s3.getSignedUrl('uploadPart', params)
     return {
