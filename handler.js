@@ -5,10 +5,11 @@ const s3 = new AWS.S3();
 
 module.exports.signedUrl = async event => {
   try {
+    const {FileName} = events['queryStringParameters']
     // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#getSignedUrlPromise-property
     const url = await s3.getSignedUrlPromise('putObject', {
       Bucket: process.env.S3_BUCKET,
-      Key: 'test-file.jpg', // File name could come from queryParameters
+      Key: FileName, // File name could come from queryParameters
     });
     console.log('About to return the result');
     return {
@@ -145,11 +146,47 @@ module.exports.partialUpload = async events => {
   }
 }
 
+module.exports.singleUpload = async event  => {
+  try {
+    console.log('The body is', event.body);
+    const {FileName} = event['queryStringParameters']
+    var params = {
+      Bucket: process.env.S3_BUCKET,
+      Key: FileName,
+      Body: event.body
+    }
+    console.log('The params are', params)
+    const data = await s3.upload(params).promise()
+    return {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true,
+      },
+      body: JSON.stringify(data)
+    };
+  } catch(err) {
+    console.log("There is an error making the upload", err)
+    return {
+      statusCode: err.statusCode || 502,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true,
+      },
+      body: JSON.stringify({
+        success: false,
+        message: "Unable to complete the Multipart upload request",
+        err
+      })
+    }
+  }
+}
+
 module.exports.completeUpload = async event => {
   try {
     console.log('The body is', event.body)
     // const bodyData = event.body
-    var {FileName, Parts, UploadId} = event.body
+    var {FileName, UploadId} = event.body
     try {
       body = JSON.parse(event.body)
       FileName = body.FileName
@@ -158,15 +195,19 @@ module.exports.completeUpload = async event => {
     } catch (err){
       console.error('Err',err)
     }
+    console.log('The parts is', JSON.stringify(body.Parts))
+    // let p = JSON.stringify(body.Parts)
+    Parts = []
+    console.log('The new Parts array is', Parts);
     const params = {
       Bucket: process.env.S3_BUCKET, /* Bucket name */
       Key: FileName, /* File name */
       MultipartUpload: {
-        Parts: Parts /* Parts uploaded */
+        Parts: JSON.parse(JSON.stringify(body.Parts)) /* Parts uploaded */
       },
       UploadId: UploadId /* UploadId from Endpoint 1 response */
     }
-    console.log('The params is', params);
+    console.log('The params is', JSON.stringify(params));
 
     const data = await s3.completeMultipartUpload(params).promise()
 
