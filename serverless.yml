@@ -65,6 +65,14 @@ functions:
           method: POST
           cors:
             origin: '*'
+  singleUpload:
+    handler: handler.singleUpload
+    events:
+      - http:
+          path: /upload/single
+          method: POST
+          cors:
+            origin: '*'
 
 resources:
   Resources:
