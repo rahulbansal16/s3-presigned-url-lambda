@@ -18,11 +18,17 @@ provider:
   runtime: nodejs12.x
   environment:
     S3_BUCKET: { Ref: S3Bucket }
-  iamRoleStatements: # Signed URL will have same permissions as the IAM Role
+    DYNAMODB_TABLE: videos
+  iamRoleStatements:
     - Effect: Allow
       Action:
-        - s3:PutObject
-      Resource: { Fn::Join: ['', [{ Fn::GetAtt: [S3Bucket, Arn] }, '/*']] } # arn:aws:s3:::bucketName/*
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/videos"
 
 functions:
   signedUrl:
@@ -30,6 +36,14 @@ functions:
     events:
       - http:
           path: /signed-upload-url
+          method: GET
+          cors:
+            origin: '*'
+  addToDbTest:
+    handler: handler.addToDbTest
+    events:
+      - http:
+          path: /test/db
           method: GET
           cors:
             origin: '*'
@@ -73,6 +87,14 @@ functions:
           method: POST
           cors:
             origin: '*'
+  fetchUrl:
+    handler: handler.fetchUrl
+    events:
+      - http:
+          path: /video
+          method: GET
+          cors:
+            origin: '*'
 
 resources:
   Resources:
@@ -95,3 +117,17 @@ resources:
               Effect: 'Allow'
               Resource: { Fn::Join: ['', [{ Fn::GetAtt: [S3Bucket, Arn] }, '/*']] } # arn:aws:s3:::bucketName/*
               Principal: '*'
+    usersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        # TableName: videoMapping
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: videos
