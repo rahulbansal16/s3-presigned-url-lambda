@@ -230,45 +230,44 @@ module.exports.fetchUrl = async events => {
 }
 
 const uuidv4 = ()  => {
-  const length  = 10;
-  const characters ='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const length  = 15;
+  const characters ='abcdefghijklmnopqrstuvwxyz0123456789';
   let result = ' ';
   const charactersLength = characters.length;
   for ( let i = 0; i < length; i++ ) {
       result += characters.charAt(Math.floor(Math.random() * charactersLength));
   }
-  result += ".webm"
   return result.trim();
 }
 
 
-// module.exports.addToDbTest = async event => {
-//   try{
-//     const res = await addUrlToDB('https://test.com');
-//     return {
-//       statusCode: 200,
-//       body: JSON.stringify(res)
-//     }
+module.exports.addToDbTest = async event => {
+  try{
+    const res = await addUrlToDB('https://test.com');
+    return {
+      statusCode: 200,
+      body: JSON.stringify(res)
+    }
 
-//   }
-//   catch (e){
-//     console.log("There is an error", e)
-//     return {
-//       statusCode: 500,
-//       body: JSON.stringify(e)
-//     }
-//   }
-// }
+  }
+  catch (e){
+    console.log("There is an error", e)
+    return {
+      statusCode: 500,
+      body: JSON.stringify(e)
+    }
+  }
+}
 
 const addUrlToDB = async (url) => {
     const timestamp = new Date().getTime();
     const params = {
-      TableName: 'videos',
+      TableName: process.env.DYNAMODB_TABLE,
       Item: {
         id: uuidv4(),
         createdAt: timestamp,
         updatedAt: timestamp,
-        url,
+        ...url,
         views:0
       },
     };
