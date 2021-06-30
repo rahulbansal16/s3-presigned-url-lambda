@@ -1,6 +1,8 @@
 const AWS = require('aws-sdk');
 // const express = require("express");
 // const app = express();
+const dynamoDb = new AWS.DynamoDB.DocumentClient();
+
 const s3 = new AWS.S3(
   {
     apiVersion: '2006-03-01',
@@ -188,6 +190,92 @@ module.exports.singleUpload = async event  => {
   }
 }
 
+const readUrlFromDB = async uuid => {
+  const params = {
+    TableName: process.env.DYNAMODB_TABLE,
+    Key: {
+      id: uuid,
+    },
+  };
+  return dynamoDb.get(params).promise();
+}
+
+module.exports.fetchUrl = async events => {
+  try {
+    const {uuid} = events['queryStringParameters']
+    const response = await readUrlFromDB(uuid)
+    return {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true,
+      },
+      body: JSON.stringify(response)
+    }
+
+  } catch(error){
+    return {
+      statusCode: err.statusCode || 502,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true,
+      },
+      body: JSON.stringify({
+        success: false,
+        message: "Unable to complete the Multipart upload request",
+        err
+      })
+    }
+  }
+}
+
+const uuidv4 = ()  => {
+  const length  = 10;
+  const characters ='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = ' ';
+  const charactersLength = characters.length;
+  for ( let i = 0; i < length; i++ ) {
+      result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  result += ".webm"
+  return result.trim();
+}
+
+
+// module.exports.addToDbTest = async event => {
+//   try{
+//     const res = await addUrlToDB('https://test.com');
+//     return {
+//       statusCode: 200,
+//       body: JSON.stringify(res)
+//     }
+
+//   }
+//   catch (e){
+//     console.log("There is an error", e)
+//     return {
+//       statusCode: 500,
+//       body: JSON.stringify(e)
+//     }
+//   }
+// }
+
+const addUrlToDB = async (url) => {
+    const timestamp = new Date().getTime();
+    const params = {
+      TableName: 'videos',
+      Item: {
+        id: uuidv4(),
+        createdAt: timestamp,
+        updatedAt: timestamp,
+        url,
+        views:0
+      },
+    };
+    console.log('The value of the params is', params)
+    return dynamoDb.put(params).promise()
+}
+
 module.exports.completeUpload = async event => {
   try {
     console.log('The body is', event.body)
@@ -216,6 +304,7 @@ module.exports.completeUpload = async event => {
     console.log('The params is', JSON.stringify(params));
 
     const data = await s3.completeMultipartUpload(params).promise()
+    const dbUpload = await addUrlToDB(data)
 
     return {
       statusCode: 200,
@@ -223,7 +312,7 @@ module.exports.completeUpload = async event => {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Credentials': true,
       },
-      body: JSON.stringify(data)
+      body: JSON.stringify(dbUpload)
     };
   } catch (err){
     console.error('Error starting the upload request', err);
