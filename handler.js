@@ -210,7 +210,9 @@ module.exports.fetchUrl = async events => {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Credentials': true,
       },
-      body: JSON.stringify(response)
+      body: JSON.stringify({
+        location: response.Location
+      })
     }
 
   } catch(error){
