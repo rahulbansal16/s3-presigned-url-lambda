@@ -99,6 +99,14 @@ functions:
           method: GET
           cors:
             origin: '*'
+  saveVideoMetaData:
+    handler: handler.saveVideoMetaData
+    events:
+      - http:
+          path: /video
+          method: POST
+          cors:
+            origin: '*'
 
 resources:
   Resources:

@@ -200,6 +200,47 @@ const readUrlFromDB = async uuid => {
   return dynamoDb.get(params).promise();
 }
 
+module.exports.saveVideoMetaData = async events => {
+  try {
+    const json = JSON.parse(events.body)
+    console.log('The json is', json)
+    const params = {
+      TableName: process.env.DYNAMODB_TABLE,
+      Key: {
+        id: json.id,
+      },
+      UpdateExpression: 'set title=:title, description=:description, updatedAt=:date',
+      ExpressionAttributeValues: {
+        ":title":json.title,
+        ":description":json.description,
+        ":date":new Date().getTime(),
+      },
+      ReturnValues: 'ALL_NEW',
+    };
+
+    const res = await dynamoDb.update(params).promise()
+    console.log('In the saveVideoMetaData', res)
+    return {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true,
+      },
+      body: JSON.stringify(res)
+    }
+  } catch (e){
+    console.log('Error updating the db', e)
+    return {
+      statusCode: 500,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true,
+      },
+      body: JSON.stringify(e)
+    }
+  }
+}
+
 module.exports.fetchUrl = async events => {
   try {
     const {uuid} = events['queryStringParameters']
