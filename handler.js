@@ -253,7 +253,7 @@ module.exports.fetchUrl = async events => {
         'Access-Control-Allow-Credentials': true,
       },
       body: JSON.stringify({
-        location: response.Location
+        ...response.Item
       })
     }
 
