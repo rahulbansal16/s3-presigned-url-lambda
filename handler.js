@@ -245,6 +245,7 @@ module.exports.fetchUrl = async events => {
   try {
     const {uuid} = events['queryStringParameters']
     const response = await readUrlFromDB(uuid)
+    console.log('The fetch Url is', response);
     return {
       statusCode: 200,
       headers: {
@@ -286,7 +287,8 @@ const uuidv4 = ()  => {
 
 module.exports.addToDbTest = async event => {
   try{
-    const res = await addUrlToDB('https://test.com');
+    const res = await addUrlToDB({location:'https://test.com'});
+    console.log('The result of the addUrlToDb is', res);
     return {
       statusCode: 200,
       body: JSON.stringify(res)
@@ -313,9 +315,12 @@ const addUrlToDB = async (url) => {
         ...url,
         views:0
       },
+      ReturnValues: "NONE"
     };
     console.log('The value of the params is', params)
-    return dynamoDb.put(params).promise()
+    var p = dynamoDb.put(params).promise()
+    console.log('The value of the p is',p)
+    return p
 }
 
 module.exports.completeUpload = async event => {
