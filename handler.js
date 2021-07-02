@@ -309,18 +309,18 @@ const addUrlToDB = async (url) => {
     const params = {
       TableName: process.env.DYNAMODB_TABLE,
       Item: {
-        id: uuidv4(),
+        ...url,
         createdAt: timestamp,
         updatedAt: timestamp,
-        ...url,
+        id: uuidv4(),
         views:0
       },
       ReturnValues: "NONE"
     };
     console.log('The value of the params is', params)
-    var p = dynamoDb.put(params).promise()
+    var p = await dynamoDb.put(params).promise()
     console.log('The value of the p is',p)
-    return p
+    return params.Item
 }
 
 module.exports.completeUpload = async event => {
