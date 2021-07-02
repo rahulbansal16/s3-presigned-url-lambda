@@ -12,7 +12,7 @@
 # Happy Coding!
 
 service: s3-presigned-url
-
+# variablesResolutionMode: 20210326
 provider:
   name: aws
   runtime: nodejs12.x
