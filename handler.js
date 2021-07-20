@@ -191,13 +191,22 @@ module.exports.singleUpload = async event  => {
 }
 
 const readUrlFromDB = async uuid => {
+  console.log("The uuid is", uuid)
   const params = {
     TableName: process.env.DYNAMODB_TABLE,
     Key: {
-      id: uuid,
+      id:uuid,
     },
+    ExpressionAttributeNames:{
+      "#views": "views"
+    },
+    UpdateExpression: 'set #views=#views + :inc',
+    ExpressionAttributeValues: {
+      ":inc": 1,
+    },
+    ReturnValues: 'ALL_OLD',
   };
-  return dynamoDb.get(params).promise();
+  return dynamoDb.update(params).promise()
 }
 
 module.exports.saveVideoMetaData = async events => {
@@ -253,11 +262,11 @@ module.exports.fetchUrl = async events => {
         'Access-Control-Allow-Credentials': true,
       },
       body: JSON.stringify({
-        ...response.Item
+        ...response
       })
     }
 
-  } catch(error){
+  } catch(err){
     return {
       statusCode: err.statusCode || 502,
       headers: {
