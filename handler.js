@@ -293,6 +293,58 @@ const uuidv4 = ()  => {
   return result.trim();
 }
 
+module.exports.getVideos = async events => {
+  try {
+    const {count} = events['queryStringParameters']
+    const userId = null;
+    const start = null;
+    const response = await readVideoFromDB(userId, start, count)
+    console.log('The fetch Url is', response);
+    return {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true,
+      },
+      body: JSON.stringify({
+        response
+      })
+    }
+
+  } catch(err){
+    console.error(err);
+    return {
+      statusCode: err.statusCode || 502,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true,
+      },
+      body: JSON.stringify({
+        success: false,
+        message: "Unable to fetch the videos",
+        err
+      })
+    }
+  }
+}
+
+
+// Make the readFromDB in a sorted Order
+// https://stackoverflow.com/questions/56637894/how-can-i-query-dynamodb-with-sort-and-limit-for-a-non-sort-key-parameter
+// Some of the keywords like #views #Locations are reserved so they require some ExpressionAttributeNames
+const readVideoFromDB = async (userId, start, count) => {
+  // console.log("The uuid is", uuid)
+  const params = {
+    TableName: process.env.DYNAMODB_TABLE,
+    ProjectionExpression: "id, createdAt, updatedAt, #Location, description, title, #views",
+    ExpressionAttributeNames:{
+      "#views": "views",
+      "#Location": "Location"
+    },
+    Limit: count
+  };
+  return dynamoDb.scan(params).promise()
+}
 
 module.exports.addToDbTest = async event => {
   try{

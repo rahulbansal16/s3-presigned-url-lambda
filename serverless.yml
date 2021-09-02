@@ -107,6 +107,14 @@ functions:
           method: POST
           cors:
             origin: '*'
+  getVideos:
+    handler: handler.getVideos
+    events:
+      - http:
+          path: /video
+          method: GET
+          cors:
+            origin: '*'
 
 resources:
   Resources:
