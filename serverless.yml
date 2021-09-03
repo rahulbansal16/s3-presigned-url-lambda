@@ -111,7 +111,7 @@ functions:
     handler: handler.getVideos
     events:
       - http:
-          path: /video
+          path: /videos
           method: GET
           cors:
             origin: '*'
