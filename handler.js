@@ -1,4 +1,7 @@
 const AWS = require('aws-sdk');
+const crypto = require('crypto');
+const { encode } = require('punycode');
+const sha256 = x => crypto.createHash('sha256').update(x, 'utf8').digest('hex');
 // const express = require("express");
 // const app = express();
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
@@ -9,6 +12,46 @@ const s3 = new AWS.S3(
 	  signatureVersion: 'v4'
   }
 );
+
+var iv = new Buffer.from('');   //(null) iv
+var algorithm = 'aes-256-ecb';
+var password = '5A7234743109217A25432A462D4A614E';      //key password for cryptography
+
+const encrypt = (string) => {
+  buffer = Buffer.from(string);
+  var cipher = crypto.createCipheriv(algorithm, Buffer.from(password),iv)
+  var crypted = Buffer.concat([cipher.update(buffer),cipher.final()]);
+  return crypted.toString('hex');
+}
+
+const decrypt = (encrypted) => {
+  let encryptedText = Buffer.from(encrypted, 'hex');
+  let decipher = crypto.createDecipheriv(algorithm, Buffer.from(password), iv);
+  let decrypted = decipher.update(encryptedText);
+  decrypted = Buffer.concat([decrypted, decipher.final()]);
+  return decrypted.toString();
+}
+
+module.exports.encrypt = async event => {
+  console.log('Encrypting')
+  return {
+    'hi': encrypt("Hi"),
+    'hip': decrypt(encrypt('Hi'))
+  }
+}
+
+const generateUID = (email, timestamp) => {
+  return encrypt(email + '#' + timestamp)
+}
+
+const parseUID = (uid) => {
+  const decrypt = decrypt(uid)
+  const email,timestamp = decrypt.split('#')
+  return {
+    email,
+    timestamp
+  }
+}
 
 module.exports.signedUrl = async event => {
   try {
