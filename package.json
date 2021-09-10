@@ -1,0 +1,24 @@
+{
+  "name": "s3-presigned-url-lambda",
+  "version": "1.0.0",
+  "description": "Generate S3 pre-signed URLs for uploading files from AWS Lambda using Serverless Framework.",
+  "main": "handler.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "",
+    "deploy": "serverless.cmd deploy"
+  },
+  "devDependencies": {
+    "serverless": "2.57.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rahulbansal16/s3-presigned-url-lambda.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rahulbansal16/s3-presigned-url-lambda/issues"
+  },
+  "homepage": "https://github.com/rahulbansal16/s3-presigned-url-lambda#readme"
+}
