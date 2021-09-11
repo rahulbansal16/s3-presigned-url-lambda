@@ -347,7 +347,8 @@ const uuidv4 = ()  => {
 
 module.exports.getVideos = async events => {
   try {
-    const {count, start} = events['queryStringParameters']
+    const {count, start} = {undefined, undefined}
+    // events['queryStringParameters']
     const userId = null;
     const response = await readVideoFromDB(userId, start, count)
     console.log('The fetch Url is', response);
@@ -384,7 +385,7 @@ module.exports.getVideos = async events => {
 // https://stackoverflow.com/questions/56637894/how-can-i-query-dynamodb-with-sort-and-limit-for-a-non-sort-key-parameter
 // Some of the keywords like #views #Locations are reserved so they require some ExpressionAttributeNames
 
-const readVideoFromDB = async (userId, start, count) => {
+const readVideoFromDB = async (userId, start, count, lastEvaluatedKey) => {
   // console.log("The uuid is", uuid)
   const params = {
     TableName: process.env.DYNAMODB_TABLE,
@@ -397,9 +398,15 @@ const readVideoFromDB = async (userId, start, count) => {
     ExpressionAttributeValues:{
       ":user":email
     },
+    // ExclusiveStartKey : {id: "bansal.rahul14@gmail.com", createdAt: 1631341081601},
     Limit: count,
     ScanIndexForward: false
   };
+
+  if (lastEvaluatedKey !== undefined){
+    params["ExclusiveStartKey"] = lastEvaluatedKey;
+  }
+
   return dynamoDb.query(params).promise()
 }
 
