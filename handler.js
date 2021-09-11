@@ -383,18 +383,24 @@ module.exports.getVideos = async events => {
 // Make the readFromDB in a sorted Order
 // https://stackoverflow.com/questions/56637894/how-can-i-query-dynamodb-with-sort-and-limit-for-a-non-sort-key-parameter
 // Some of the keywords like #views #Locations are reserved so they require some ExpressionAttributeNames
+
 const readVideoFromDB = async (userId, start, count) => {
   // console.log("The uuid is", uuid)
   const params = {
     TableName: process.env.DYNAMODB_TABLE,
+    KeyConditionExpression: "id = :user" ,
     ProjectionExpression: "id, createdAt, updatedAt, #Location, description, title, #views, uid",
     ExpressionAttributeNames:{
       "#views": "views",
       "#Location": "Location"
     },
-    Limit: count
+    ExpressionAttributeValues:{
+      ":user":email
+    },
+    Limit: count,
+    ScanIndexForward: false
   };
-  return dynamoDb.scan(params).promise()
+  return dynamoDb.query(params).promise()
 }
 
 module.exports.addToDbTest = async event => {
