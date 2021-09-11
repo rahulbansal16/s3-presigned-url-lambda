@@ -5,6 +5,7 @@ const sha256 = x => crypto.createHash('sha256').update(x, 'utf8').digest('hex');
 // const express = require("express");
 // const app = express();
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
+const email = "bansal.rahul14@gmail.com"
 
 const s3 = new AWS.S3(
   {
@@ -40,16 +41,20 @@ module.exports.encrypt = async event => {
   }
 }
 
-const generateUID = (email, timestamp) => {
-  return encrypt(email + '#' + timestamp)
+const generateUID = (email, createdAt) => {
+  return encrypt(email + '#' + createdAt)
 }
 
 const parseUID = (uid) => {
-  const decrypt = decrypt(uid)
-  const email,timestamp = decrypt.split('#')
+  console.log('The UID is', uid)
+  const decrypted = decrypt(uid)
+  console.log('The decrypt is', decrypted)
+  const split = decrypted.split('#')
+  const email = split[0]
+  const createdAt = parseInt(split[1])
   return {
     email,
-    timestamp
+    createdAt
   }
 }
 
@@ -234,11 +239,12 @@ module.exports.singleUpload = async event  => {
 }
 
 const readUrlFromDB = async uuid => {
-  console.log("The uuid is", uuid)
+  const {email, createdAt} = parseUID(uuid)
   const params = {
     TableName: process.env.DYNAMODB_TABLE,
     Key: {
-      id:uuid,
+      id: email,
+      createdAt
     },
     ExpressionAttributeNames:{
       "#views": "views"
@@ -255,11 +261,13 @@ const readUrlFromDB = async uuid => {
 module.exports.saveVideoMetaData = async events => {
   try {
     const json = JSON.parse(events.body)
+    const {email, createdAt} = parseUID(json.uuid);
     console.log('The json is', json)
     const params = {
       TableName: process.env.DYNAMODB_TABLE,
       Key: {
-        id: json.id,
+        id: email,
+        createdAt
       },
       UpdateExpression: 'set title=:title, description=:description, updatedAt=:date',
       ExpressionAttributeValues: {
@@ -310,6 +318,7 @@ module.exports.fetchUrl = async events => {
     }
 
   } catch(err){
+    console.log('The error is', err)
     return {
       statusCode: err.statusCode || 502,
       headers: {
@@ -318,7 +327,7 @@ module.exports.fetchUrl = async events => {
       },
       body: JSON.stringify({
         success: false,
-        message: "Unable to complete the Multipart upload request",
+        message: "Unable to get the video url",
         err
       })
     }
@@ -338,9 +347,8 @@ const uuidv4 = ()  => {
 
 module.exports.getVideos = async events => {
   try {
-    const {count} = events['queryStringParameters']
+    const {count, start} = events['queryStringParameters']
     const userId = null;
-    const start = null;
     const response = await readVideoFromDB(userId, start, count)
     console.log('The fetch Url is', response);
     return {
@@ -379,7 +387,7 @@ const readVideoFromDB = async (userId, start, count) => {
   // console.log("The uuid is", uuid)
   const params = {
     TableName: process.env.DYNAMODB_TABLE,
-    ProjectionExpression: "id, createdAt, updatedAt, #Location, description, title, #views",
+    ProjectionExpression: "id, createdAt, updatedAt, #Location, description, title, #views, uid",
     ExpressionAttributeNames:{
       "#views": "views",
       "#Location": "Location"
@@ -409,6 +417,8 @@ module.exports.addToDbTest = async event => {
 }
 
 const addUrlToDB = async (url) => {
+  // replace the email with the userid in the future
+    var email = "bansal.rahul14@gmail.com";
     const timestamp = new Date().getTime();
     const params = {
       TableName: process.env.DYNAMODB_TABLE,
@@ -416,7 +426,8 @@ const addUrlToDB = async (url) => {
         ...url,
         createdAt: timestamp,
         updatedAt: timestamp,
-        id: uuidv4(),
+        id: email,
+        uid: generateUID(email, timestamp),
         views:0
       },
       ReturnValues: "NONE"
