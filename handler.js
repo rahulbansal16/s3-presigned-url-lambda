@@ -26,14 +26,12 @@ const encrypt = (string) => {
 }
 
 const decrypt = (encrypted) => {
-  encrypted="e50ab6c7390bbe1d1ae059f898c46b26101de382d97caf500eb9bf91fd174ed053a6543104c5dedb75fda4cbe9656476"
   let encryptedText = Buffer.from(encrypted, 'hex');
   let decipher = crypto.createDecipheriv(algorithm, Buffer.from(password), iv);
   let decrypted = decipher.update(encryptedText);
   decrypted = Buffer.concat([decrypted, decipher.final()]);
   return decrypted.toString();
 }
-console.log(decrypt())
 
 module.exports.encrypt = async event => {
   console.log('Encrypting')
