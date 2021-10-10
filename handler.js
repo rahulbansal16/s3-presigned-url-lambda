@@ -26,12 +26,14 @@ const encrypt = (string) => {
 }
 
 const decrypt = (encrypted) => {
+  encrypted="e50ab6c7390bbe1d1ae059f898c46b26101de382d97caf500eb9bf91fd174ed053a6543104c5dedb75fda4cbe9656476"
   let encryptedText = Buffer.from(encrypted, 'hex');
   let decipher = crypto.createDecipheriv(algorithm, Buffer.from(password), iv);
   let decrypted = decipher.update(encryptedText);
   decrypted = Buffer.concat([decrypted, decipher.final()]);
   return decrypted.toString();
 }
+console.log(decrypt())
 
 module.exports.encrypt = async event => {
   console.log('Encrypting')
@@ -438,9 +440,9 @@ module.exports.addToDbTest = async event => {
   }
 }
 
-const addUrlToDB = async (url) => {
+const addUrlToDB = async (url, id) => {
   // replace the email with the userid in the future
-    var email = "bansal.rahul14@gmail.com";
+    var email = id || "bansal.rahul14@gmail.com";
     const timestamp = new Date().getTime();
     const params = {
       TableName: process.env.DYNAMODB_TABLE,
@@ -468,6 +470,7 @@ module.exports.completeUpload = async event => {
     try {
       body = JSON.parse(event.body)
       FileName = body.FileName
+      uid = body.uid
       Parts = body.Parts
       UploadId = body.UploadId
     } catch (err){
@@ -488,7 +491,7 @@ module.exports.completeUpload = async event => {
     console.log('The params is', JSON.stringify(params));
 
     const data = await s3.completeMultipartUpload(params).promise()
-    const dbUpload = await addUrlToDB(data)
+    const dbUpload = await addUrlToDB(data, uid)
 
     return {
       statusCode: 200,
