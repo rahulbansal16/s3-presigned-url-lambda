@@ -347,7 +347,7 @@ const uuidv4 = ()  => {
 
 module.exports.getVideos = async events => {
   try {
-    const {count, id, createdAt} = events['queryStringParameters']
+    const {count, id, createdAt, userId} = events['queryStringParameters']
     var lastEvaluatedKey = {
       id: "bansal.rahul14@gmail.com",
       createdAt: 1631341081601
@@ -358,7 +358,6 @@ module.exports.getVideos = async events => {
       lastEvaluatedKey.id = id;
       lastEvaluatedKey.createdAt = createdAt;
     }
-    const userId = null;
     const response = await readVideoFromDB(userId, count, lastEvaluatedKey)
     console.log('The fetch Url is', response);
     return {
@@ -405,7 +404,7 @@ const readVideoFromDB = async (userId, count, lastEvaluatedKey) => {
       "#Location": "Location"
     },
     ExpressionAttributeValues:{
-      ":user":email
+      ":user":userId || email
     },
     // ExclusiveStartKey : {id: "bansal.rahul14@gmail.com", createdAt: 1631341081601},
     Limit: count,
